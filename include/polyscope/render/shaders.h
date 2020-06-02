@@ -92,6 +92,25 @@ extern const ShaderStageSpecification CYLINDER_BLEND_VALUE_FRAG_SHADER;
 extern const ShaderStageSpecification CYLINDER_BLEND_COLOR_FRAG_SHADER;
 extern const ShaderStageSpecification CYLINDER_PICK_FRAG_SHADER;
 
+// == Cuboid shaders
+extern const ShaderStageSpecification PASSTHRU_CUBOID_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_VALUE_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_COLOR_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_VALUE_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_COLOR_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_PICK_VERT_SHADER;
+extern const ShaderStageSpecification CUBOID_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_VALUE_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_COLOR_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_VALUE_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_COLOR_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_PICK_GEOM_SHADER;
+extern const ShaderStageSpecification CUBOID_FRAG_SHADER;
+extern const ShaderStageSpecification CUBOID_VALUE_FRAG_SHADER;
+extern const ShaderStageSpecification CUBOID_COLOR_FRAG_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_VALUE_FRAG_SHADER;
+extern const ShaderStageSpecification CUBOID_BLEND_COLOR_FRAG_SHADER;
+extern const ShaderStageSpecification CUBOID_PICK_FRAG_SHADER;
 
 } // namespace render
 } // namespace polyscope

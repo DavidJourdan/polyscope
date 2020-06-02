@@ -31,6 +31,7 @@ if("${POLYSCOPE_BACKEND_OPENGL3_GLFW}")
 		render/opengl/shaders/sphere_shaders.cpp  
 		render/opengl/shaders/ribbon_shaders.cpp  
 		render/opengl/shaders/cylinder_shaders.cpp  
+		render/opengl/shaders/cuboid_shaders.cpp  
 	)
 
   list(APPEND BACKEND_HEADERS
@@ -150,6 +151,12 @@ SET(SRCS
 	curve_network_scalar_quantity.cpp
 	curve_network_color_quantity.cpp
 	curve_network_vector_quantity.cpp
+
+  # Cuboid network
+	cuboid_network.cpp
+	cuboid_network_scalar_quantity.cpp
+	cuboid_network_color_quantity.cpp
+	cuboid_network_vector_quantity.cpp
   
   # Rendering utilities
 	trace_vector_field.cpp

@@ -4,10 +4,10 @@
 #include "polyscope/messages.h"
 
 #include "polyscope/curve_network.h"
+#include "polyscope/file_helpers.h"
 #include "polyscope/point_cloud.h"
 #include "polyscope/surface_mesh.h"
 #include "polyscope/surface_mesh_io.h"
-#include "polyscope/file_helpers.h"
 
 #include <iostream>
 #include <unordered_set>
