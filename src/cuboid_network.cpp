@@ -218,10 +218,6 @@ void CuboidNetwork::refresh() {
   edgeProgram.reset();
   nodePickProgram.reset();
   edgePickProgram.reset();
-
-  for (auto& q : quantities) {
-    q.second->geometryChanged();
-  }
   requestRedraw();
   QuantityStructure<CuboidNetwork>::refresh(); // call base class version, which refreshes quantities
 }
@@ -330,7 +326,7 @@ std::tuple<glm::vec3, glm::vec3> CuboidNetwork::boundingBox() {
   glm::vec3 max = -glm::vec3{1, 1, 1} * std::numeric_limits<float>::infinity();
 
   for (glm::vec3& rawP : nodes) {
-    glm::vec3 p = glm::vec3(objectTransform * glm::vec4(rawP, 1.0));
+    glm::vec3 p = glm::vec3(objectTransform.get() * glm::vec4(rawP, 1.0));
     min = componentwiseMin(min, p);
     max = componentwiseMax(max, p);
   }

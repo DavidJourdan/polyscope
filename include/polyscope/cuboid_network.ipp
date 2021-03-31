@@ -139,9 +139,7 @@ void CuboidNetwork::updateOrientations(const V& newOrientations) {
   nodePickProgram.reset();
   edgePickProgram.reset();
 
-  for (auto& q : quantities) {
-    q.second->geometryChanged();
-  }
+  geometryChanged();
 }
 
 // Shorthand to get a curve network from polyscope

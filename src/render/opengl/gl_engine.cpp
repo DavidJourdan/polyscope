@@ -2039,7 +2039,7 @@ void GLEngine::populateDefaultShadersAndRules() {
   registeredShaderPrograms.insert({"RAYCAST_SPHERE", {{FLEX_SPHERE_VERT_SHADER, FLEX_SPHERE_GEOM_SHADER, FLEX_SPHERE_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"RAYCAST_VECTOR", {{FLEX_VECTOR_VERT_SHADER, FLEX_VECTOR_GEOM_SHADER, FLEX_VECTOR_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"RAYCAST_CYLINDER", {{FLEX_CYLINDER_VERT_SHADER, FLEX_CYLINDER_GEOM_SHADER, FLEX_CYLINDER_FRAG_SHADER}, DrawMode::Points}});  
-  registeredShaderPrograms.insert({"CUBOID", {{PASSTHRU_CUBOID_VERT_SHADER, CUBOID_GEOM_SHADER, CUBOID_FRAG_SHADER}, DrawMode::Points}});
+  registeredShaderPrograms.insert({"CUBOID", {{FLEX_CUBOID_VERT_SHADER, FLEX_CUBOID_GEOM_SHADER, FLEX_CUBOID_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"HISTOGRAM", {{HISTOGRAM_VERT_SHADER, HISTOGRAM_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"GROUND_PLANE_TILE", {{GROUND_PLANE_VERT_SHADER, GROUND_PLANE_TILE_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"GROUND_PLANE_TILE_REFLECT", {{GROUND_PLANE_VERT_SHADER, GROUND_PLANE_TILE_REFLECT_FRAG_SHADER}, DrawMode::Triangles}});

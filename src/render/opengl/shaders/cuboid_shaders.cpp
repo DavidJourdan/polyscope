@@ -29,6 +29,8 @@ const ShaderStageSpecification FLEX_CUBOID_VERT_SHADER = {
 
     // source
     R"(
+        ${ GLSL_VERSION }$
+
         in vec3 a_position_tail;
         in vec3 a_position_tip;
         in vec3 a_up_direction;
@@ -36,12 +38,16 @@ const ShaderStageSpecification FLEX_CUBOID_VERT_SHADER = {
 
         out vec4 position_tip;
         out vec3 up_direction;
+
+        ${ VERT_DECLARATIONS }$
         
         void main()
         {
             gl_Position = u_modelView * vec4(a_position_tail,1.0);
             position_tip = u_modelView * vec4(a_position_tip, 1.0);
             up_direction = mat3(u_modelView) * a_up_direction;
+
+            ${ VERT_ASSIGNMENTS }$
         }
     )"
 };
@@ -79,7 +85,7 @@ R"(
     uniform float u_wb;
     out vec3 tipView;
     out vec3 tailView;
-    out vec3 cameraNormal;
+    out vec3 normal;
 
     ${ GEOM_DECLARATIONS }$
 
@@ -108,40 +114,40 @@ R"(
         vec4 p8 = tipProj + dx + dy;
         
         // Other data to emit   
-        cameraNormal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
-        cameraNormal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex(); 
-        cameraNormal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
-        cameraNormal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
+        normal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
+        normal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex(); 
+        normal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
+        normal = dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
         EndPrimitive();
 
-        cameraNormal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex();
-        cameraNormal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
-        cameraNormal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex(); 
-        cameraNormal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
+        normal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex();
+        normal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
+        normal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex(); 
+        normal = -dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
         EndPrimitive();
 
-        cameraNormal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
-        cameraNormal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
-        cameraNormal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex(); 
-        cameraNormal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
+        normal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
+        normal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
+        normal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex(); 
+        normal = dx.xyz / u_wb; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
         EndPrimitive();
 
-        cameraNormal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
-        cameraNormal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
-        cameraNormal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex(); 
-        cameraNormal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex();
+        normal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
+        normal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
+        normal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex(); 
+        normal = -dy.xyz / u_wn; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex();
         EndPrimitive(); 
 
-        cameraNormal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
-        cameraNormal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
-        cameraNormal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
-        cameraNormal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
+        normal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p1; EmitVertex();
+        normal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p2; EmitVertex(); 
+        normal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p3; EmitVertex(); 
+        normal = -cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p4; EmitVertex();
         EndPrimitive(); 
 
-        cameraNormal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex();
-        cameraNormal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex(); 
-        cameraNormal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
-        cameraNormal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex();
+        normal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p5; EmitVertex();
+        normal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p6; EmitVertex(); 
+        normal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p7; EmitVertex(); 
+        normal = cylDir; tailView = tailViewVal; tipView = tipViewVal; gl_Position = p8; EmitVertex();
         EndPrimitive(); 
     }
 )"
@@ -175,7 +181,7 @@ R"(
         uniform float u_wb;
         in vec3 tailView;
         in vec3 tipView;
-        in vec3 cameraNormal;
+        in vec3 normal;
         layout(location = 0) out vec4 outputF;
 
         float LARGE_FLOAT();
@@ -199,27 +205,27 @@ R"(
            if(tHit >= LARGE_FLOAT()) {
               discard;
            }
-           // float depth = fragDepthFromView(u_projMatrix, depthRange, pHit);
-           // ${ GLOBAL_FRAGMENT_FILTER }$
+        //    float depth = fragDepthFromView(u_projMatrix, depthRange, pHit);
+
+           ${ GLOBAL_FRAGMENT_FILTER }$
            
-           // // Set depth (expensive!)
-           // gl_FragDepth = depth;
+        //   // Set depth (expensive!)
+        //    gl_FragDepth = depth;
           
            // Shading
            ${ GENERATE_SHADE_VALUE }$
            ${ GENERATE_SHADE_COLOR }$
+
            // Lighting
-           vec3 shadeNormal = nHit;
+           vec3 shadeNormal = normal;
            ${ GENERATE_LIT_COLOR }$
+
            // Set alpha
            float alphaOut = 1.0;
            ${ GENERATE_ALPHA }$
+
            // Write output
            outputF = vec4(litColor, alphaOut);
-
-        //    // Set depth (expensive!)
-        //    float depth = fragDepthFromView(u_projMatrix, depthRange, pHit);
-        //    gl_FragDepth = depth;
         }
 )"
 };
@@ -246,16 +252,29 @@ const ShaderReplacementRule CUBOID_PROPAGATE_VALUE (
         )"},
       {"FRAG_DECLARATIONS", R"(
           in float a_valueToFrag;
+          uniform sampler2D t_mat_r;
+          uniform sampler2D t_mat_g;
+          uniform sampler2D t_mat_b;
+          uniform sampler2D t_mat_k;
+          vec3 lightSurfaceMat(vec3 normal, vec3 color, sampler2D t_mat_r, sampler2D t_mat_g, sampler2D t_mat_b, sampler2D t_mat_k);
         )"},
       {"GENERATE_SHADE_VALUE", R"(
           float shadeValue = a_valueToFrag;
         )"},
+      {"GENERATE_LIT_COLOR", R"(
+          vec3 litColor = lightSurfaceMat(shadeNormal, albedoColor, t_mat_r, t_mat_g, t_mat_b, t_mat_k);
+        )"}
     },
     /* uniforms */ {},
     /* attributes */ {
       {"a_value", DataType::Float},
     },
-    /* textures */ {}
+    /* textures */ {
+      {"t_mat_r", 2},
+      {"t_mat_g", 2},
+      {"t_mat_b", 2},
+      {"t_mat_k", 2},
+    }
 );
 
 // like propagate value, but takes two values at tip and tail and linearly interpolates
