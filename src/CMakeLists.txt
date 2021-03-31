@@ -32,6 +32,7 @@ if("${POLYSCOPE_BACKEND_OPENGL3_GLFW}")
 		render/opengl/shaders/sphere_shaders.cpp  
 		render/opengl/shaders/ribbon_shaders.cpp  
 		render/opengl/shaders/cylinder_shaders.cpp  
+		render/opengl/shaders/cuboid_shaders.cpp  
 		render/opengl/shaders/rules.cpp  
 		render/opengl/shaders/common.cpp  
 	)
@@ -163,6 +164,12 @@ SET(SRCS
 	curve_network_scalar_quantity.cpp
 	curve_network_color_quantity.cpp
 	curve_network_vector_quantity.cpp
+
+  # Cuboid network
+	cuboid_network.cpp
+	cuboid_network_scalar_quantity.cpp
+	cuboid_network_color_quantity.cpp
+	cuboid_network_vector_quantity.cpp
   
   # Rendering utilities
 	vector_artist.cpp

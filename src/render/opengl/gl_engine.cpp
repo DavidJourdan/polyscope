@@ -11,6 +11,7 @@
 
 // all the shaders
 #include "polyscope/render/opengl/shaders/common.h"
+#include "polyscope/render/opengl/shaders/cuboid_shaders.h"
 #include "polyscope/render/opengl/shaders/cylinder_shaders.h"
 #include "polyscope/render/opengl/shaders/gizmo_shaders.h"
 #include "polyscope/render/opengl/shaders/ground_plane_shaders.h"
@@ -2037,7 +2038,8 @@ void GLEngine::populateDefaultShadersAndRules() {
   registeredShaderPrograms.insert({"MESH", {{FLEX_MESH_VERT_SHADER, FLEX_MESH_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"RAYCAST_SPHERE", {{FLEX_SPHERE_VERT_SHADER, FLEX_SPHERE_GEOM_SHADER, FLEX_SPHERE_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"RAYCAST_VECTOR", {{FLEX_VECTOR_VERT_SHADER, FLEX_VECTOR_GEOM_SHADER, FLEX_VECTOR_FRAG_SHADER}, DrawMode::Points}});
-  registeredShaderPrograms.insert({"RAYCAST_CYLINDER", {{FLEX_CYLINDER_VERT_SHADER, FLEX_CYLINDER_GEOM_SHADER, FLEX_CYLINDER_FRAG_SHADER}, DrawMode::Points}});
+  registeredShaderPrograms.insert({"RAYCAST_CYLINDER", {{FLEX_CYLINDER_VERT_SHADER, FLEX_CYLINDER_GEOM_SHADER, FLEX_CYLINDER_FRAG_SHADER}, DrawMode::Points}});  
+  registeredShaderPrograms.insert({"CUBOID", {{PASSTHRU_CUBOID_VERT_SHADER, CUBOID_GEOM_SHADER, CUBOID_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"HISTOGRAM", {{HISTOGRAM_VERT_SHADER, HISTOGRAM_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"GROUND_PLANE_TILE", {{GROUND_PLANE_VERT_SHADER, GROUND_PLANE_TILE_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"GROUND_PLANE_TILE_REFLECT", {{GROUND_PLANE_VERT_SHADER, GROUND_PLANE_TILE_REFLECT_FRAG_SHADER}, DrawMode::Triangles}});
@@ -2115,6 +2117,13 @@ void GLEngine::populateDefaultShadersAndRules() {
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_COLOR", CYLINDER_PROPAGATE_COLOR});
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_BLEND_COLOR", CYLINDER_PROPAGATE_BLEND_COLOR});
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_PICK", CYLINDER_PROPAGATE_PICK});
+
+  // cuboid things
+  registeredShaderRules.insert({"CUBOID_PROPAGATE_VALUE", CUBOID_PROPAGATE_VALUE});
+  registeredShaderRules.insert({"CUBOID_PROPAGATE_BLEND_VALUE", CUBOID_PROPAGATE_BLEND_VALUE});
+  registeredShaderRules.insert({"CUBOID_PROPAGATE_COLOR", CUBOID_PROPAGATE_COLOR});
+  registeredShaderRules.insert({"CUBOID_PROPAGATE_BLEND_COLOR", CUBOID_PROPAGATE_BLEND_COLOR});
+  registeredShaderRules.insert({"CUBOID_PROPAGATE_PICK", CUBOID_PROPAGATE_PICK});
 
   // clang-format on
 };
