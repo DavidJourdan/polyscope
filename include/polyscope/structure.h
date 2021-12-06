@@ -37,6 +37,9 @@ public:
   virtual void draw() = 0;
   virtual void drawPick() = 0;
 
+  // == Add rendering rules
+  std::vector<std::string> addStructureRules(std::vector<std::string> initRules);
+
   // == Build the ImGUI ui elements
   void buildUI();
   virtual void buildCustomUI() = 0;       // overridden by childen to add custom UI data
@@ -50,9 +53,10 @@ public:
   const std::string name; // should be unique amongst registered structures with this type
   std::string uniquePrefix();
 
-  // = Length and bounding box (returned in object coordinates)
-  virtual std::tuple<glm::vec3, glm::vec3> boundingBox() = 0; // get axis-aligned bounding box
-  virtual double lengthScale() = 0;                           // get characteristic length
+  // = Length and bounding box
+  // (returned in world coordinates, after the object transform is applied)
+  std::tuple<glm::vec3, glm::vec3> boundingBox(); // get axis-aligned bounding box
+  float lengthScale();                           // get characteristic length
 
   // = Basic state
   virtual std::string typeName() = 0;
@@ -62,7 +66,14 @@ public:
   void centerBoundingBox();
   void rescaleToUnit();
   void resetTransform();
-  void setTransformUniforms(render::ShaderProgram& p);
+  void setTransform(glm::mat4x4 transform);
+  void setPosition(glm::vec3 vec);   // set the transform translation to be vec
+  void translate(glm::vec3 vec); // *adds* vec to the position
+  glm::mat4x4 getTransform();
+  glm::vec3 getPosition();
+
+  void setStructureUniforms(render::ShaderProgram& p);
+  bool wantsCullPosition();
 
   // Re-perform any setup work, including refreshing all quantities
   virtual void refresh();
@@ -77,25 +88,37 @@ public:
   void setEnabledAllOfType(bool newEnabled); // enable/disable all structures of this type
 
   // Options
-  Structure* setTransparency(double newVal); // also enables transparency if <1 and transparency is not enabled
-  double getTransparency();
+  Structure* setTransparency(float newVal); // also enables transparency if <1 and transparency is not enabled
+  float getTransparency();
 
-  void setIgnoreSlicePlane(std::string name, bool newValue);
+  Structure* setCullWholeElements(bool newVal);
+  bool getCullWholeElements();
+
+  Structure* setIgnoreSlicePlane(std::string name, bool newValue);
   bool getIgnoreSlicePlane(std::string name);
 
 protected:
   // = State
   PersistentValue<bool> enabled;
-  
-  PersistentValue<glm::mat4> objectTransform;
+  PersistentValue<glm::mat4> objectTransform; // rigid transform
 
   // 0 for transparent, 1 for opaque, only has effect if engine transparency is set
   PersistentValue<float> transparency;
 
   // Widget that wraps the transform
   TransformationGizmo transformGizmo;
-  
+
+  PersistentValue<bool> cullWholeElements;
+
   PersistentValue<std::vector<std::string>> ignoredSlicePlaneNames;
+
+  // Manage the bounding box & length scale
+  // (this is defined _before_ the object transform is applied. To get the scale/bounding box after transforms, use the
+  // boundingBox() and lengthScale() member function)
+  // The STRUCTURE is responsible for making sure updateObjectSpaceBounds() gets called any time the geometry changes
+  std::tuple<glm::vec3, glm::vec3> objectSpaceBoundingBox;
+  float objectSpaceLengthScale;
+  virtual void updateObjectSpaceBounds() = 0;
 };
 
 

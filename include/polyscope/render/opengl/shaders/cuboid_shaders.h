@@ -17,7 +17,7 @@ extern const ShaderReplacementRule CUBOID_PROPAGATE_BLEND_VALUE;
 extern const ShaderReplacementRule CUBOID_PROPAGATE_COLOR;
 extern const ShaderReplacementRule CUBOID_PROPAGATE_BLEND_COLOR;
 extern const ShaderReplacementRule CUBOID_PROPAGATE_PICK;
-
+extern const ShaderReplacementRule CUBOID_CULLPOS_FROM_MID;
 
 } // namespace backend_openGL3_glfw
 } // namespace render

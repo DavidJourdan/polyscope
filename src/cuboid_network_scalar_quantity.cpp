@@ -24,7 +24,7 @@ void CuboidNetworkScalarQuantity::draw() {
   }
 
   // Set uniforms
-  parent.setTransformUniforms(*edgeProgram);
+  parent.setStructureUniforms(*edgeProgram);
 
   parent.setCuboidNetworkEdgeUniforms(*edgeProgram);
 
@@ -68,7 +68,7 @@ CuboidNetworkNodeScalarQuantity::CuboidNetworkNodeScalarQuantity(std::string nam
 
 void CuboidNetworkNodeScalarQuantity::createProgram() {
   // Create the program to draw this quantity
-  edgeProgram = render::engine->requestShader("CUBOID", addScalarRules({"CUBOID_PROPAGATE_BLEND_VALUE"}));
+  edgeProgram = render::engine->requestShader("CUBOID", addScalarRules(parent.addCuboidNetworkEdgeRules({"CUBOID_PROPAGATE_BLEND_VALUE"})));
 
   // Fill geometry buffers
   parent.fillEdgeGeometryBuffers(*edgeProgram);

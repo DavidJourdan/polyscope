@@ -91,7 +91,7 @@ protected:
 class GLShaderProgram : public ShaderProgram {
 
 public:
-  GLShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm, unsigned int nPatchVertices = 0);
+  GLShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm);
   ~GLShaderProgram() override;
 
   // === Store data
@@ -194,8 +194,6 @@ private:
 
   // Drawing related
   void activateTextures();
-
-  int nPatchVertices;
 };
 
 
@@ -220,6 +218,7 @@ public:
 
   // === Windowing and framework things
   void makeContextCurrent() override;
+  void focusWindow() override;
   void showWindow() override;
   void hideWindow() override;
   void updateWindowSize(bool force = false) override;
@@ -262,8 +261,9 @@ public:
   // Transparency
   virtual void applyTransparencySettings() override;
 
+  virtual void setFrontFaceCCW(bool newVal) override;
+
 protected:
-  
   // Helpers
   virtual void createSlicePlaneFliterRule(std::string name) override;
 

@@ -55,11 +55,12 @@ public:
   // Render for picking
   virtual void drawPick() override;
 
-  // A characteristic length for the structure
-  virtual double lengthScale() override;
+  // // A characteristic length for the structure
+  // virtual double lengthScale() override;
 
-  // Axis-aligned bounding box for the structure
-  virtual std::tuple<glm::vec3, glm::vec3> boundingBox() override;
+  // // Axis-aligned bounding box for the structure
+  // virtual std::tuple<glm::vec3, glm::vec3> boundingBox() override;
+  virtual void updateObjectSpaceBounds() override;
   virtual std::string typeName() override;
 
   virtual void refresh() override;
@@ -115,7 +116,8 @@ public:
   void setCuboidNetworkEdgeUniforms(render::ShaderProgram& p);
   void fillEdgeGeometryBuffers(render::ShaderProgram& program);
   void fillNodeGeometryBuffers(render::ShaderProgram& program);
-
+  std::vector<std::string> addCuboidNetworkNodeRules(std::vector<std::string> initRules);
+  std::vector<std::string> addCuboidNetworkEdgeRules(std::vector<std::string> initRules);
 
   // === Mutate
   template <class V>

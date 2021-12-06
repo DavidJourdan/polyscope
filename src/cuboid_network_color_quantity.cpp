@@ -19,7 +19,7 @@ void CuboidNetworkColorQuantity::draw() {
   }
 
   // Set uniforms
-  parent.setTransformUniforms(*edgeProgram);
+  parent.setStructureUniforms(*edgeProgram);
 
   parent.setCuboidNetworkEdgeUniforms(*edgeProgram);
 
@@ -37,8 +37,11 @@ CuboidNetworkNodeColorQuantity::CuboidNetworkNodeColorQuantity(std::string name,
 {}
 
 void CuboidNetworkNodeColorQuantity::createProgram() {
+
   // Create the program to draw this quantity
-  edgeProgram = render::engine->requestShader("CUBOID", {"CUBOID_PROPAGATE_BLEND_COLOR", "SHADE_COLOR"});
+  edgeProgram = render::engine->requestShader(
+      "CUBOID", parent.addCuboidNetworkEdgeRules({"CUBOID_PROPAGATE_BLEND_COLOR", "SHADE_COLOR"}));
+
   // Fill geometry buffers
   parent.fillEdgeGeometryBuffers(*edgeProgram);
 
@@ -91,7 +94,8 @@ CuboidNetworkEdgeColorQuantity::CuboidNetworkEdgeColorQuantity(std::string name,
 {}
 
 void CuboidNetworkEdgeColorQuantity::createProgram() {
-  edgeProgram = render::engine->requestShader("CUBOID", {"CUBOID_PROPAGATE_COLOR", "SHADE_COLOR"});
+  edgeProgram = render::engine->requestShader(
+      "CUBOID", parent.addCuboidNetworkEdgeRules({"CUBOID_PROPAGATE_COLOR", "SHADE_COLOR"}));
 
   // Fill geometry buffers
   parent.fillEdgeGeometryBuffers(*edgeProgram);

@@ -45,6 +45,8 @@ CurveNetwork::CurveNetwork(std::string name, std::vector<glm::vec3> nodes_, std:
     nodeDegrees[nA]++;
     nodeDegrees[nB]++;
   }
+  
+  updateObjectSpaceBounds();
 }
 
 
@@ -79,8 +81,8 @@ void CurveNetwork::draw() {
     }
 
     // Set program uniforms
-    setTransformUniforms(*edgeProgram);
-    setTransformUniforms(*nodeProgram);
+    setStructureUniforms(*edgeProgram);
+    setStructureUniforms(*nodeProgram);
 
     setCurveNetworkEdgeUniforms(*edgeProgram);
     setCurveNetworkNodeUniforms(*nodeProgram);
@@ -110,8 +112,8 @@ void CurveNetwork::drawPick() {
   }
 
   // Set uniforms
-  setTransformUniforms(*edgePickProgram);
-  setTransformUniforms(*nodePickProgram);
+  setStructureUniforms(*edgePickProgram);
+  setStructureUniforms(*nodePickProgram);
 
   setCurveNetworkEdgeUniforms(*edgePickProgram);
   setCurveNetworkNodeUniforms(*nodePickProgram);
@@ -120,17 +122,37 @@ void CurveNetwork::drawPick() {
   nodePickProgram->draw();
 }
 
+std::vector<std::string> CurveNetwork::addCurveNetworkNodeRules(std::vector<std::string> initRules) {
+  initRules = addStructureRules(initRules);
+  if (wantsCullPosition()) {
+    initRules.push_back("SPHERE_CULLPOS_FROM_CENTER");
+  }
+  return initRules;
+}
+std::vector<std::string> CurveNetwork::addCurveNetworkEdgeRules(std::vector<std::string> initRules) {
+  initRules = addStructureRules(initRules);
+  if (wantsCullPosition()) {
+    initRules.push_back("CYLINDER_CULLPOS_FROM_MID");
+  }
+  return initRules;
+}
+
 void CurveNetwork::prepare() {
   if (dominantQuantity != nullptr) {
     return;
   }
 
   // It no quantity is coloring the network, draw with a default color
-  nodeProgram = render::engine->requestShader("RAYCAST_SPHERE", {"SHADE_BASECOLOR"});
-  render::engine->setMaterial(*nodeProgram, getMaterial());
 
-  edgeProgram = render::engine->requestShader("RAYCAST_CYLINDER", {"SHADE_BASECOLOR"});
-  render::engine->setMaterial(*edgeProgram, getMaterial());
+  {
+    nodeProgram = render::engine->requestShader("RAYCAST_SPHERE", addCurveNetworkNodeRules({"SHADE_BASECOLOR"}));
+    render::engine->setMaterial(*nodeProgram, getMaterial());
+  }
+
+  {
+    edgeProgram = render::engine->requestShader("RAYCAST_CYLINDER", addCurveNetworkEdgeRules({"SHADE_BASECOLOR"}));
+    render::engine->setMaterial(*edgeProgram, getMaterial());
+  }
 
   // Fill out the geometry data for the programs
   fillNodeGeometryBuffers(*nodeProgram);
@@ -149,8 +171,9 @@ void CurveNetwork::preparePick() {
   size_t pickStart = pick::requestPickBufferRange(this, totalPickElements);
 
   { // Set up node picking program
-    nodePickProgram = render::engine->requestShader("RAYCAST_SPHERE", {"SPHERE_PROPAGATE_COLOR"},
-                                                    render::ShaderReplacementDefaults::Pick);
+    nodePickProgram =
+        render::engine->requestShader("RAYCAST_SPHERE", addCurveNetworkNodeRules({"SPHERE_PROPAGATE_COLOR"}),
+                                      render::ShaderReplacementDefaults::Pick);
 
     // Fill color buffer with packed point indices
     std::vector<glm::vec3> pickColors;
@@ -168,8 +191,9 @@ void CurveNetwork::preparePick() {
   }
 
   { // Set up edge picking program
-    edgePickProgram = render::engine->requestShader("RAYCAST_CYLINDER", {"CYLINDER_PROPAGATE_PICK"},
-                                                    render::ShaderReplacementDefaults::Pick);
+    edgePickProgram =
+        render::engine->requestShader("RAYCAST_CYLINDER", addCurveNetworkEdgeRules({"CYLINDER_PROPAGATE_PICK"}),
+                                      render::ShaderReplacementDefaults::Pick);
 
     // Fill color buffer with packed node/edge indices
     std::vector<glm::vec3> edgePickTail(nEdges());
@@ -227,6 +251,7 @@ void CurveNetwork::refresh() {
 }
 
 void CurveNetwork::geometryChanged() {
+  // TODO this is overkill
   refresh();
 }
 
@@ -306,34 +331,23 @@ void CurveNetwork::buildCustomOptionsUI() {
   }
 }
 
-double CurveNetwork::lengthScale() {
-  // TODO cache
-
-  // Measure length scale as twice the radius from the center of the bounding box
-  auto bound = boundingBox();
-  glm::vec3 center = 0.5f * (std::get<0>(bound) + std::get<1>(bound));
-
-  double lengthScale = 0.0;
-  for (glm::vec3& rawP : nodes) {
-    glm::vec3 p = glm::vec3(objectTransform.get() * glm::vec4(rawP, 1.0));
-    lengthScale = std::max(lengthScale, (double)glm::length2(p - center));
-  }
-
-  return 2 * std::sqrt(lengthScale);
-}
-
-std::tuple<glm::vec3, glm::vec3> CurveNetwork::boundingBox() {
-
+void CurveNetwork::updateObjectSpaceBounds() {
+  // bounding box
   glm::vec3 min = glm::vec3{1, 1, 1} * std::numeric_limits<float>::infinity();
   glm::vec3 max = -glm::vec3{1, 1, 1} * std::numeric_limits<float>::infinity();
-
-  for (glm::vec3& rawP : nodes) {
-    glm::vec3 p = glm::vec3(objectTransform.get() * glm::vec4(rawP, 1.0));
+  for (const glm::vec3& p : nodes) {
     min = componentwiseMin(min, p);
     max = componentwiseMax(max, p);
   }
+  objectSpaceBoundingBox = std::make_tuple(min, max);
 
-  return std::make_tuple(min, max);
+  // length scale, as twice the radius from the center of the bounding box
+  glm::vec3 center = 0.5f * (min + max);
+  float lengthScale = 0.0;
+  for (const glm::vec3& p : nodes) {
+    lengthScale = std::max(lengthScale, glm::length2(p - center));
+  }
+  objectSpaceLengthScale = 2 * std::sqrt(lengthScale);
 }
 
 CurveNetwork* CurveNetwork::setColor(glm::vec3 newVal) {
@@ -352,7 +366,7 @@ float CurveNetwork::getRadius() { return radius.get().asAbsolute(); }
 
 CurveNetwork* CurveNetwork::setMaterial(std::string m) {
   material = m;
-  geometryChanged(); // (serves the purpose of re-initializing everything, though this is a bit overkill)
+  refresh(); // (serves the purpose of re-initializing everything, though this is a bit overkill)
   requestRedraw();
   return this;
 }

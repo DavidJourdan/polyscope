@@ -8,7 +8,6 @@
 #include "imgui.h"
 #include "stb_image.h"
 
-
 namespace polyscope {
 
 int dimension(const TextureFormat& x) {
@@ -132,9 +131,7 @@ ShaderReplacementRule::ShaderReplacementRule(std::string ruleName_,
     : ruleName(ruleName_), replacements(replacements_), uniforms(uniforms_), attributes(attributes_),
       textures(textures_) {}
 
-ShaderProgram::ShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm,
-                             unsigned int nPatchVertices_)
-    : drawMode(dm), nPatchVertices(nPatchVertices_) {
+ShaderProgram::ShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm) : drawMode(dm) {
 
   drawMode = dm;
   if (dm == DrawMode::IndexedLines || dm == DrawMode::IndexedLineStrip || dm == DrawMode::IndexedLineStripAdjacency ||
@@ -504,6 +501,8 @@ void Engine::setSSAAFactor(int newVal) {
   updateWindowSize(true);
 }
 
+bool Engine::getFrontFaceCCW() { return frontFaceCCW; }
+
 int Engine::getSSAAFactor() { return ssaaFactor; }
 
 void Engine::allocateGlobalBuffersAndPrograms() {
@@ -609,9 +608,10 @@ void Engine::addSlicePlane(std::string uniquePostfix) {
   // identical.
 
   createSlicePlaneFliterRule(uniquePostfix);
+  slicePlaneCount++;
 
   // Add rules
-  std::vector<std::string> newRules{"GENERATE_WORLD_POS", "CULL_POS_FROM_WORLD", "SLICE_PLANE_CULL_" + uniquePostfix};
+  std::vector<std::string> newRules{"SLICE_PLANE_CULL_" + uniquePostfix};
   defaultRules_sceneObject.insert(defaultRules_sceneObject.end(), newRules.begin(), newRules.end());
   defaultRules_pick.insert(defaultRules_pick.end(), newRules.begin(), newRules.end());
 
@@ -621,8 +621,9 @@ void Engine::addSlicePlane(std::string uniquePostfix) {
 
 void Engine::removeSlicePlane(std::string uniquePostfix) {
 
+  slicePlaneCount--;
   // Remove the (last occurence of the) rules we added
-  std::vector<std::string> newRules{"GENERATE_WORLD_POS", "CULL_POS_FROM_WORLD", "SLICE_PLANE_CULL_" + uniquePostfix};
+  std::vector<std::string> newRules{"SLICE_PLANE_CULL_" + uniquePostfix};
   auto deleteLast = [&](std::vector<std::string>& vec, std::string target) {
     for (size_t i = vec.size(); i > 0; i--) {
       if (vec[i - 1] == target) {
@@ -641,6 +642,9 @@ void Engine::removeSlicePlane(std::string uniquePostfix) {
   // Regenerate everything
   polyscope::refresh();
 }
+
+bool Engine::slicePlanesEnabled() { return slicePlaneCount > 0; }
+
 
 std::vector<glm::vec3> Engine::screenTrianglesCoords() {
   std::vector<glm::vec3> coords = {{-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {-1.0f, 1.0f, 0.0f},
@@ -908,6 +912,19 @@ const ValueColorMap& Engine::getColorMap(const std::string& name) {
   return *colorMaps[0];
 }
 
+
+void Engine::configureImGui() {
+
+  if (options::prepareImGuiFontsCallback) {
+    std::tie(globalFontAtlas, regularFont, monoFont) = options::prepareImGuiFontsCallback();
+  }
+
+
+  if (options::configureImGuiStyleCallback) {
+    options::configureImGuiStyleCallback();
+  }
+}
+
 void Engine::loadDefaultColorMap(std::string name) {
 
   const std::vector<glm::vec3>* buff = nullptr;
@@ -929,6 +946,8 @@ void Engine::loadDefaultColorMap(std::string name) {
     buff = &CM_RAINBOW;
   } else if (name == "jet") {
     buff = &CM_JET;
+  } else if (name == "turbo") {
+    buff = &CM_TURBO;
   } else {
     throw std::runtime_error("unrecognized default colormap " + name);
   }
@@ -949,6 +968,7 @@ void Engine::loadDefaultColorMaps() {
   loadDefaultColorMap("spectral");
   loadDefaultColorMap("rainbow");
   loadDefaultColorMap("jet");
+  loadDefaultColorMap("turbo");
 }
 
 
@@ -964,64 +984,6 @@ void Engine::showTextureInImGuiWindow(std::string windowName, TextureBuffer* buf
   ImGui::Image(buffer->getNativeHandle(), ImVec2(w, h), ImVec2(0, 1), ImVec2(1, 0));
 
   ImGui::End();
-}
-
-void Engine::setImGuiStyle() {
-
-  // Style
-  ImGuiStyle* style = &ImGui::GetStyle();
-  style->WindowRounding = 1;
-  style->FrameRounding = 1;
-  style->FramePadding.y = 4;
-  style->ScrollbarRounding = 1;
-  style->ScrollbarSize = 20;
-
-
-  // Colors
-  ImVec4* colors = style->Colors;
-  colors[ImGuiCol_Text] = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
-  colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-  colors[ImGuiCol_WindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.70f);
-  colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-  colors[ImGuiCol_PopupBg] = ImVec4(0.11f, 0.11f, 0.14f, 0.92f);
-  colors[ImGuiCol_Border] = ImVec4(0.50f, 0.50f, 0.50f, 0.50f);
-  colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-  colors[ImGuiCol_FrameBg] = ImVec4(0.63f, 0.63f, 0.63f, 0.39f);
-  colors[ImGuiCol_FrameBgHovered] = ImVec4(0.47f, 0.69f, 0.59f, 0.40f);
-  colors[ImGuiCol_FrameBgActive] = ImVec4(0.41f, 0.64f, 0.53f, 0.69f);
-  colors[ImGuiCol_TitleBg] = ImVec4(0.27f, 0.54f, 0.42f, 0.83f);
-  colors[ImGuiCol_TitleBgActive] = ImVec4(0.32f, 0.63f, 0.49f, 0.87f);
-  colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.27f, 0.54f, 0.42f, 0.83f);
-  colors[ImGuiCol_MenuBarBg] = ImVec4(0.40f, 0.55f, 0.48f, 0.80f);
-  colors[ImGuiCol_ScrollbarBg] = ImVec4(0.63f, 0.63f, 0.63f, 0.39f);
-  colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.00f, 0.00f, 0.00f, 0.30f);
-  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.80f, 0.62f, 0.40f);
-  colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.39f, 0.80f, 0.61f, 0.60f);
-  colors[ImGuiCol_CheckMark] = ImVec4(0.90f, 0.90f, 0.90f, 0.50f);
-  colors[ImGuiCol_SliderGrab] = ImVec4(1.00f, 1.00f, 1.00f, 0.30f);
-  colors[ImGuiCol_SliderGrabActive] = ImVec4(0.39f, 0.80f, 0.61f, 0.60f);
-  colors[ImGuiCol_Button] = ImVec4(0.35f, 0.61f, 0.49f, 0.62f);
-  colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.71f, 0.57f, 0.79f);
-  colors[ImGuiCol_ButtonActive] = ImVec4(0.46f, 0.80f, 0.64f, 1.00f);
-  colors[ImGuiCol_Header] = ImVec4(0.40f, 0.90f, 0.67f, 0.45f);
-  colors[ImGuiCol_HeaderHovered] = ImVec4(0.45f, 0.90f, 0.69f, 0.80f);
-  colors[ImGuiCol_HeaderActive] = ImVec4(0.53f, 0.87f, 0.71f, 0.80f);
-  colors[ImGuiCol_Separator] = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
-  colors[ImGuiCol_SeparatorHovered] = ImVec4(0.60f, 0.70f, 0.66f, 1.00f);
-  colors[ImGuiCol_SeparatorActive] = ImVec4(0.70f, 0.90f, 0.81f, 1.00f);
-  colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.16f);
-  colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.78f, 1.00f, 0.90f, 0.60f);
-  colors[ImGuiCol_ResizeGripActive] = ImVec4(0.78f, 1.00f, 0.90f, 0.90f);
-  colors[ImGuiCol_PlotLines] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
-  colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-  colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-  colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-  colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
-  colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
-  colors[ImGuiCol_DragDropTarget] = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
-  colors[ImGuiCol_Tab] = ImVec4(0.27f, 0.54f, 0.42f, 0.83f);
-  colors[ImGuiCol_TabHovered] = ImVec4(0.34f, 0.68f, 0.53f, 0.83f);
-  colors[ImGuiCol_TabActive] = ImVec4(0.38f, 0.76f, 0.58f, 0.83f);
 }
 
 ImFontAtlas* Engine::getImGuiGlobalFontAtlas() { return globalFontAtlas; }

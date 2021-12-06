@@ -22,6 +22,7 @@
 #include "polyscope/render/opengl/shaders/surface_mesh_shaders.h"
 #include "polyscope/render/opengl/shaders/texture_draw_shaders.h"
 #include "polyscope/render/opengl/shaders/vector_shaders.h"
+#include "polyscope/render/opengl/shaders/volume_mesh_shaders.h"
 
 
 #include "stb_image.h"
@@ -329,8 +330,7 @@ void GLFrameBuffer::blitTo(FrameBuffer* targetIn) {
 // ==================  Shader Program  =========================
 // =============================================================
 
-GLShaderProgram::GLShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm,
-                                 unsigned int nPatchVertices)
+GLShaderProgram::GLShaderProgram(const std::vector<ShaderStageSpecification>& stages, DrawMode dm)
     : ShaderProgram(stages, dm) {
 
 
@@ -1137,8 +1137,6 @@ void GLShaderProgram::draw() {
     break;
   case DrawMode::TrianglesAdjacency:
     break;
-  case DrawMode::Patches:
-    break;
   case DrawMode::LinesAdjacency:
     break;
   case DrawMode::IndexedLines:
@@ -1176,22 +1174,8 @@ void MockGLEngine::initialize() {
 }
 
 void MockGLEngine::initializeImGui() {
-
   ImGui::CreateContext(); // must call once at start
-
-  // Set up ImGUI glfw bindings
-
-  // Build a fake font atlas for mocking
-  ImGuiIO& io = ImGui::GetIO();
-  unsigned char* tex_pixels = NULL;
-  int tex_w, tex_h;
-  io.Fonts->GetTexDataAsRGBA32(&tex_pixels, &tex_w, &tex_h);
-
-  // io.OptResizeWindowsFromEdges = true;
-  // ImGui::StyleColorsLight();
-  setImGuiStyle();
-
-  globalFontAtlas = io.Fonts;
+  configureImGui();
 }
 
 void MockGLEngine::shutdownImGui() { ImGui::DestroyContext(); }
@@ -1218,6 +1202,8 @@ std::vector<unsigned char> MockGLEngine::readDisplayBuffer() {
 void MockGLEngine::checkError(bool fatal) { checkGLError(fatal); }
 
 void MockGLEngine::makeContextCurrent() {}
+
+void MockGLEngine::focusWindow() {}
 
 void MockGLEngine::showWindow() {}
 
@@ -1366,6 +1352,10 @@ std::shared_ptr<ShaderProgram> MockGLEngine::requestShader(const std::string& pr
 
 void MockGLEngine::applyTransparencySettings() {}
 
+void MockGLEngine::setFrontFaceCCW(bool newVal) {
+  if (newVal == frontFaceCCW) return;
+  frontFaceCCW = newVal;
+}
 
 void MockGLEngine::populateDefaultShadersAndRules() {
   using namespace backend_openGL3_glfw;
@@ -1376,7 +1366,9 @@ void MockGLEngine::populateDefaultShadersAndRules() {
 
   // == Load general base shaders
   registeredShaderPrograms.insert({"MESH", {{FLEX_MESH_VERT_SHADER, FLEX_MESH_FRAG_SHADER}, DrawMode::Triangles}});
+  registeredShaderPrograms.insert({"SLICE_TETS", {{SLICE_TETS_VERT_SHADER, SLICE_TETS_GEOM_SHADER, SLICE_TETS_FRAG_SHADER}, DrawMode::Triangles}});
   registeredShaderPrograms.insert({"RAYCAST_SPHERE", {{FLEX_SPHERE_VERT_SHADER, FLEX_SPHERE_GEOM_SHADER, FLEX_SPHERE_FRAG_SHADER}, DrawMode::Points}});
+  registeredShaderPrograms.insert({"POINT_QUAD", {{FLEX_POINTQUAD_VERT_SHADER, FLEX_POINTQUAD_GEOM_SHADER, FLEX_POINTQUAD_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"RAYCAST_VECTOR", {{FLEX_VECTOR_VERT_SHADER, FLEX_VECTOR_GEOM_SHADER, FLEX_VECTOR_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"RAYCAST_CYLINDER", {{FLEX_CYLINDER_VERT_SHADER, FLEX_CYLINDER_GEOM_SHADER, FLEX_CYLINDER_FRAG_SHADER}, DrawMode::Points}});
   registeredShaderPrograms.insert({"HISTOGRAM", {{HISTOGRAM_VERT_SHADER, HISTOGRAM_FRAG_SHADER}, DrawMode::Triangles}});
@@ -1414,9 +1406,9 @@ void MockGLEngine::populateDefaultShadersAndRules() {
   registeredShaderRules.insert({"TRANSPARENCY_PEEL_STRUCTURE", TRANSPARENCY_PEEL_STRUCTURE});
   registeredShaderRules.insert({"TRANSPARENCY_PEEL_GROUND", TRANSPARENCY_PEEL_GROUND});
   
-  registeredShaderRules.insert({"GENERATE_WORLD_POS", GENERATE_WORLD_POS});
-  registeredShaderRules.insert({"CULL_POS_FROM_WORLD", CULL_POS_FROM_WORLD});
-  registeredShaderRules.insert({"CULL_POS_FROM_ATTR", CULL_POS_FROM_ATTR});
+  registeredShaderRules.insert({"GENERATE_VIEW_POS", GENERATE_VIEW_POS});
+  registeredShaderRules.insert({"CULL_POS_FROM_VIEW", CULL_POS_FROM_VIEW});
+  //registeredShaderRules.insert({"CULL_POS_FROM_ATTR", CULL_POS_FROM_ATTR});
 
   // Lighting and shading things
   registeredShaderRules.insert({"LIGHT_MATCAP", LIGHT_MATCAP});
@@ -1434,21 +1426,27 @@ void MockGLEngine::populateDefaultShadersAndRules() {
   // mesh things
   registeredShaderRules.insert({"MESH_WIREFRAME", MESH_WIREFRAME});
   registeredShaderRules.insert({"MESH_BACKFACE_NORMAL_FLIP", MESH_BACKFACE_NORMAL_FLIP});
+  registeredShaderRules.insert({"MESH_BACKFACE_DIFFERENT", MESH_BACKFACE_DIFFERENT});
   registeredShaderRules.insert({"MESH_BACKFACE_DARKEN", MESH_BACKFACE_DARKEN});
   registeredShaderRules.insert({"MESH_PROPAGATE_VALUE", MESH_PROPAGATE_VALUE});
   registeredShaderRules.insert({"MESH_PROPAGATE_VALUE2", MESH_PROPAGATE_VALUE2});
   registeredShaderRules.insert({"MESH_PROPAGATE_COLOR", MESH_PROPAGATE_COLOR});
   registeredShaderRules.insert({"MESH_PROPAGATE_HALFEDGE_VALUE", MESH_PROPAGATE_HALFEDGE_VALUE});
+  registeredShaderRules.insert({"MESH_PROPAGATE_CULLPOS", MESH_PROPAGATE_CULLPOS});
+  registeredShaderRules.insert({"MESH_PROPAGATE_TYPE_AND_BASECOLOR2_SHADE", MESH_PROPAGATE_TYPE_AND_BASECOLOR2_SHADE});
   registeredShaderRules.insert({"MESH_PROPAGATE_PICK", MESH_PROPAGATE_PICK});
 
   // sphere things
   registeredShaderRules.insert({"SPHERE_PROPAGATE_VALUE", SPHERE_PROPAGATE_VALUE});
   registeredShaderRules.insert({"SPHERE_PROPAGATE_VALUE2", SPHERE_PROPAGATE_VALUE2});
   registeredShaderRules.insert({"SPHERE_PROPAGATE_COLOR", SPHERE_PROPAGATE_COLOR});
+  registeredShaderRules.insert({"SPHERE_CULLPOS_FROM_CENTER", SPHERE_CULLPOS_FROM_CENTER});
+  registeredShaderRules.insert({"SPHERE_CULLPOS_FROM_CENTER_QUAD", SPHERE_CULLPOS_FROM_CENTER_QUAD});
   registeredShaderRules.insert({"SPHERE_VARIABLE_SIZE", SPHERE_VARIABLE_SIZE});
 
   // vector things
   registeredShaderRules.insert({"VECTOR_PROPAGATE_COLOR", VECTOR_PROPAGATE_COLOR});
+  registeredShaderRules.insert({"VECTOR_CULLPOS_FROM_TAIL", VECTOR_CULLPOS_FROM_TAIL});
   registeredShaderRules.insert({"TRANSFORMATION_GIZMO_VEC", TRANSFORMATION_GIZMO_VEC});
 
   // cylinder things
@@ -1457,6 +1455,15 @@ void MockGLEngine::populateDefaultShadersAndRules() {
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_COLOR", CYLINDER_PROPAGATE_COLOR});
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_BLEND_COLOR", CYLINDER_PROPAGATE_BLEND_COLOR});
   registeredShaderRules.insert({"CYLINDER_PROPAGATE_PICK", CYLINDER_PROPAGATE_PICK});
+  registeredShaderRules.insert({"CYLINDER_CULLPOS_FROM_MID", CYLINDER_CULLPOS_FROM_MID});
+
+  // marching tets things
+  registeredShaderRules.insert({"SLICE_TETS_BASECOLOR_SHADE", SLICE_TETS_BASECOLOR_SHADE});
+  registeredShaderRules.insert({"SLICE_TETS_PROPAGATE_VALUE", SLICE_TETS_PROPAGATE_VALUE});
+  registeredShaderRules.insert({"SLICE_TETS_PROPAGATE_VECTOR", SLICE_TETS_PROPAGATE_VECTOR});
+  registeredShaderRules.insert({"SLICE_TETS_VECTOR_COLOR", SLICE_TETS_VECTOR_COLOR});
+  registeredShaderRules.insert({"SLICE_TETS_MESH_WIREFRAME", SLICE_TETS_MESH_WIREFRAME});
+
 
   // clang-format on
 };
@@ -1486,4 +1493,3 @@ void initializeRenderEngine() {
 } // namespace polyscope
 
 #endif
-

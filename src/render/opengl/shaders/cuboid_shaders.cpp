@@ -207,6 +207,7 @@ R"(
            }
         //    float depth = fragDepthFromView(u_projMatrix, depthRange, pHit);
 
+           ${ GLOBAL_FRAGMENT_FILTER_PREP }$
            ${ GLOBAL_FRAGMENT_FILTER }$
            
         //   // Set depth (expensive!)
@@ -389,6 +390,18 @@ const ShaderReplacementRule CUBOID_PROPAGATE_BLEND_COLOR (
       {"a_color_tail", DataType::Vector3Float},
       {"a_color_tip", DataType::Vector3Float},
     },
+    /* textures */ {}
+);
+
+const ShaderReplacementRule CUBOID_CULLPOS_FROM_MID (
+    /* rule name */ "CUBOID_CULLPOS_FROM_MID",
+    { /* replacement sources */
+      {"GLOBAL_FRAGMENT_FILTER_PREP", R"(
+          vec3 cullPos = 0.5 * (tailView + tipView);
+        )"},
+    },
+    /* uniforms */ {},
+    /* attributes */ {},
     /* textures */ {}
 );
 
